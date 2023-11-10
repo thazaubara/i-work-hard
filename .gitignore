@@ -1,0 +1,8 @@
+
+.DS_Store
+
+bmd_credentials.py
+
+.idea/
+
+*.pyc
