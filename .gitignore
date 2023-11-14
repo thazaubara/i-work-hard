@@ -6,3 +6,5 @@ bmd_credentials.py
 .idea/
 
 *.pyc
+
+logs.txt
