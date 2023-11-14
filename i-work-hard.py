@@ -131,7 +131,7 @@ def core_time():
     return start_time <= current_time <= end_time
 
 def creeate_file_if_not_exists():
-    print(f"logs.txt did not exist. I created one for you.")
+    print(f"logs.txt did not exist. I created one for you at {os.getcwd()}")
     if not os.path.exists("logs.txt"):
         with open("logs.txt", "w") as file:
             json.dump([], file)
