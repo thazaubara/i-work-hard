@@ -1,4 +1,5 @@
 import json
+import os
 
 import bmd_credentials as credentials
 import sys
@@ -129,10 +130,18 @@ def core_time():
     end_time = time(20, 0)
     return start_time <= current_time <= end_time
 
+def creeate_file_if_not_exists():
+    print(f"logs.txt did not exist. I created one for you.")
+    if not os.path.exists("logs.txt"):
+        with open("logs.txt", "w") as file:
+            json.dump([], file)
+
 def file_get_last_entry():
     content = []
     with open("logs.txt", mode='r') as file:
         content = json.load(file)
+    if len(content) == 0:
+        return None
     return content[-1]
 
 def file_append_entry(entry):
@@ -156,6 +165,9 @@ def file_update_last_entry(entry):
 def first_entry_today():
     last_entry = file_get_last_entry()
 
+    if last_entry is None:
+        return True
+
     if last_entry["date"] != date_now:
         return True
     else:
@@ -165,8 +177,9 @@ def homeoffice():
     return now.weekday() in [1, 2, 4]  # is monday or thursday
 
 def main():
-
+    creeate_file_if_not_exists()
     print(f"I WORK HARD at {date_now} {time_now} -> ", end="")
+
 
     if weekend():
         print('Weekend!')
