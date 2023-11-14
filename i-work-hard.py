@@ -236,3 +236,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # do_bmd_stuff(action_logout)
