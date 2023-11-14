@@ -128,7 +128,7 @@ def weekend():
 
 def core_time():
     current_time = now.time()
-    start_time = time(8, 0)
+    start_time = time(9, 0)
     end_time = time(20, 0)
     return start_time <= current_time <= end_time
 
