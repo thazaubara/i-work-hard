@@ -25,6 +25,8 @@ date_now = now.strftime("%d.%m.%Y")
 time_now = now.strftime("%H:%M")
 day_now = now.strftime("%A")
 
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
 def do_bmd_stuff(action, headless=True):
     options = webdriver.ChromeOptions()
     options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
