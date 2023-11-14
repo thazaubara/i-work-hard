@@ -216,6 +216,7 @@ def main():
             print(f"Feierabend!")
             # TODO: do_bmd_stuff() with action_logout
             last_entry["finished"] = "yes"
+            last_entry["logout_time"] = time_now
             file_update_last_entry(last_entry)
 
 if __name__ == '__main__':
