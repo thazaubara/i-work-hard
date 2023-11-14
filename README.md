@@ -17,3 +17,7 @@ https://www.geeksforgeeks.org/how-to-install-selenium-webdriver-on-macos/
 
 # Problems
 Problem chrome newer than what chromedriver supports.
+
+# Logic
+
+![image-20231114160809927](./_images/image-20231114160809927.png)
