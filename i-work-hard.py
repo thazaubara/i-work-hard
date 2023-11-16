@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 
@@ -182,15 +183,20 @@ def print_log(message):
     print(f"I WORK HARD at {date_now} {time_now} -> {message}")
 
 def main():
-    create_file_if_not_exists()
-    #print(f"I WORK HARD at {date_now} {time_now} -> ", end="")
+    parser = argparse.ArgumentParser(description='BMD Buchung')
+    parser.add_argument('-v', action='store_true', help='verbose output. print everything.')
+    args = parser.parse_args()
+    verbose = args.v
 
+    create_file_if_not_exists()
 
     if weekend():
-        # print('Weekend!')
+        if verbose:
+            print_log('Weekend!')
         return
     if not core_time():
-        # print('Not core time!')
+        if verbose:
+            print_log('Not core time!')
         return
     if first_entry_today():
         if homeoffice():
@@ -217,7 +223,8 @@ def main():
         # print("not first entry today")
         last_entry = file_get_last_entry()
         if last_entry["finished"] == "yes":
-            # print("Day is finished. Nothing to do.")
+            if verbose:
+                print_log("Day is finished. Nothing to do.")
             return
 
         string_time = last_entry['end']
@@ -229,7 +236,8 @@ def main():
             hours, remainder = divmod(time_difference.seconds, 3600)
             minutes = remainder // 60
             time_left_string = f"{hours:02}:{minutes:02}"
-            # print(f"Do more work. Can go home in {time_left_string}")
+            if verbose:
+                print_log(f"Do more work. Can go home in {time_left_string}")
         else:
             print_log(f"Feierabend!")
             # TODO: do_bmd_stuff() with action_logout
