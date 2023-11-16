@@ -132,11 +132,11 @@ def core_time():
     end_time = time(20, 0)
     return start_time <= current_time <= end_time
 
-def creeate_file_if_not_exists():
-    print_log(f"logs.txt did not exist. I created one for you at {os.getcwd()}")
+def create_file_if_not_exists():
     if not os.path.exists("logs.txt"):
         with open("logs.txt", "w") as file:
             json.dump([], file)
+        print_log(f"logs.txt did not exist. I created one for you at {os.getcwd()}")
 
 def file_get_last_entry():
     content = []
@@ -182,7 +182,7 @@ def print_log(message):
     print(f"I WORK HARD at {date_now} {time_now} -> {message}")
 
 def main():
-    creeate_file_if_not_exists()
+    create_file_if_not_exists()
     #print(f"I WORK HARD at {date_now} {time_now} -> ", end="")
 
 
