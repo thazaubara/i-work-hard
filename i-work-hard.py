@@ -187,7 +187,7 @@ def main():
         print('Weekend!')
         return
     if not core_time():
-        print('Not core time!')
+        # print('Not core time!')
         return
     if first_entry_today():
         if homeoffice():
@@ -214,7 +214,7 @@ def main():
         # print("not first entry today")
         last_entry = file_get_last_entry()
         if last_entry["finished"] == "yes":
-            print("Day is finished. Nothing to do.")
+            # print("Day is finished. Nothing to do.")
             return
 
         string_time = last_entry['end']
@@ -226,7 +226,7 @@ def main():
             hours, remainder = divmod(time_difference.seconds, 3600)
             minutes = remainder // 60
             time_left_string = f"{hours:02}:{minutes:02}"
-            print(f"Do more work. Can go home in {time_left_string}")
+            # print(f"Do more work. Can go home in {time_left_string}")
         else:
             print(f"Feierabend!")
             # TODO: do_bmd_stuff() with action_logout
