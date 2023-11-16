@@ -133,7 +133,7 @@ def core_time():
     return start_time <= current_time <= end_time
 
 def creeate_file_if_not_exists():
-    print(f"logs.txt did not exist. I created one for you at {os.getcwd()}")
+    print_log(f"logs.txt did not exist. I created one for you at {os.getcwd()}")
     if not os.path.exists("logs.txt"):
         with open("logs.txt", "w") as file:
             json.dump([], file)
@@ -178,13 +178,16 @@ def first_entry_today():
 def homeoffice():
     return now.weekday() in [1, 2, 4]  # is monday or thursday
 
+def print_log(message):
+    print(f"I WORK HARD at {date_now} {time_now} -> {message}")
+
 def main():
     creeate_file_if_not_exists()
-    print(f"I WORK HARD at {date_now} {time_now} -> ", end="")
+    #print(f"I WORK HARD at {date_now} {time_now} -> ", end="")
 
 
     if weekend():
-        print('Weekend!')
+        # print('Weekend!')
         return
     if not core_time():
         # print('Not core time!')
@@ -203,7 +206,7 @@ def main():
         result_time = now + timedelta(hours=day_debit)
         day_ends = result_time.strftime('%H:%M')
 
-        print(f"Starting {action} at {time_now}, ending at {day_ends}")
+        print_log(f"Starting {action} at {time_now}, ending at {day_ends}")
         if day_debit == 0.0:
             new_entry = {"date": date_now, "day": day_now, "action": "cancel booking", "start": time_now, "end": day_ends, "finished": "yes"}
         else:
@@ -228,7 +231,7 @@ def main():
             time_left_string = f"{hours:02}:{minutes:02}"
             # print(f"Do more work. Can go home in {time_left_string}")
         else:
-            print(f"Feierabend!")
+            print_log(f"Feierabend!")
             # TODO: do_bmd_stuff() with action_logout
             last_entry["finished"] = "yes"
             last_entry["logout_time"] = time_now
