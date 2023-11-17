@@ -120,7 +120,7 @@ def do_bmd_stuff(action, headless=True):
         return day_debit_float, day_so_far_float
 
     except Exception as e:
-        print("Error in Script. Exiting.")
+        print_log("Error in Script. Exiting.")
         print(e)
         sys.exit(1)
 
