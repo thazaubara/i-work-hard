@@ -112,10 +112,10 @@ def do_bmd_stuff(action, headless=True):
 
         # TODO Logout. bc -> The max. number of 5 zulässigen Datenbankverbindungen pro Benutzer wurde überschritten!
         # CLICK USER
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBtnCMDUser77-btnInnerEl"))).click()
+        # WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBtnCMDUser77-btnInnerEl"))).click()
         # CLICK LOGOOUT
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBar68ItemCMDLogout-itemEl"))).click()
-        print("Logged out. Quitting Driver.")
+        # WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBar68ItemCMDLogout-itemEl"))).click()
+        # print("Logged out. Quitting Driver.")
         driver.quit()
         return day_debit_float, day_so_far_float
 
