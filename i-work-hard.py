@@ -82,7 +82,7 @@ def do_bmd_stuff(action, headless=True):
             print("Error parsing time. Exiting.")
             sys.exit(1)
 
-        if action == homeoffice:
+        if action == action_homeoffice:
             # CLICK POSTING TYPE
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn162-btnEl"))).click()
             # CLICK "HOMEOFFICE"
@@ -185,8 +185,11 @@ def print_log(message):
 def main():
     parser = argparse.ArgumentParser(description='BMD Buchung')
     parser.add_argument('-v', action='store_true', help='verbose output. print everything.')
+    parser.add_argument('-w', action='store_true', default=False, help='run in windowed mode. no headless browser.')
     args = parser.parse_args()
     verbose = args.v
+    headless = not args.w
+
 
     create_file_if_not_exists()
 
@@ -203,7 +206,7 @@ def main():
             action = action_homeoffice
         else:
             action = action_normalbuchung
-        day_debit, day_so_far = do_bmd_stuff(action)
+        day_debit, day_so_far = do_bmd_stuff(action, headless=headless)
         # TODO: do_bmd_stuff() with action.
         # TODO: also quit booking if day_debit is 0.0, but still return day_debit and day_so_far
 
@@ -241,7 +244,7 @@ def main():
                 print_log(f"Do more work. Can go home in {time_left_string}")
         else:
             print_log(f"Feierabend!")
-            do_bmd_stuff(action_logout)
+            do_bmd_stuff(action_logout, headless=headless)
             # TODO: do_bmd_stuff() with action_logout
             last_entry["finished"] = "yes"
             last_entry["logout_time"] = time_now
