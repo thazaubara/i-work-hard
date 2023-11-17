@@ -203,11 +203,12 @@ def main():
             action = action_homeoffice
         else:
             action = action_normalbuchung
+        day_debit, day_so_far = do_bmd_stuff(action)
         # TODO: do_bmd_stuff() with action.
         # TODO: also quit booking if day_debit is 0.0, but still return day_debit and day_so_far
 
-        day_debit = 8.0
-        day_sofar = 0.0
+        #day_debit = 8.0
+        #day_sofar = 0.0
 
         result_time = now + timedelta(hours=day_debit)
         day_ends = result_time.strftime('%H:%M')
@@ -240,6 +241,7 @@ def main():
                 print_log(f"Do more work. Can go home in {time_left_string}")
         else:
             print_log(f"Feierabend!")
+            do_bmd_stuff(action_logout)
             # TODO: do_bmd_stuff() with action_logout
             last_entry["finished"] = "yes"
             last_entry["logout_time"] = time_now
