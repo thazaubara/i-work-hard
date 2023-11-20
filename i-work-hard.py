@@ -4,6 +4,7 @@ import os
 
 import bmd_credentials as credentials
 import sys
+import time as t
 
 
 from selenium import webdriver
@@ -27,6 +28,11 @@ time_now = now.strftime("%H:%M")
 day_now = now.strftime("%A")
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+
+def sleep():
+    wait_because_bmd_is_slow = 1
+    t.sleep(wait_because_bmd_is_slow)
 
 def do_bmd_stuff(action, headless=True):
     options = webdriver.ChromeOptions()
@@ -60,10 +66,12 @@ def do_bmd_stuff(action, headless=True):
         loginbutton.click()
 
         # CLICK THE TIME BUTTON#
+        sleep()
         WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "TileButtonPKG564-btnWrap"))).click()
         print("Login Successful.")
 
         # CLICK THE POST TOUCH BUTTON
+        sleep()
         WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "TileButtonCID31513-btnWrap"))).click()
 
         # GET WORKING TIME TODAY
@@ -82,26 +90,36 @@ def do_bmd_stuff(action, headless=True):
             print("Error parsing time. Exiting.")
             sys.exit(1)
 
+        # print(f"Day debit: {day_debit_float}")
+
         if action == action_homeoffice:
             # CLICK POSTING TYPE
+            sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn162-btnEl"))).click()
             # CLICK "HOMEOFFICE"
+            sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn287-btnEl"))).click()
             # CLICK SAVE BUTTON
+            sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn179-btnEl"))).click()
             print("Homeoffice booked.")
         elif action == action_normalbuchung:
             # CLICK POSTING TYPE
+            sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn162-btnEl"))).click()
             # CLICK "NORMAL BOOKING"
+            sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn281-btnEl"))).click()
             # CLICK SAVE BUTTON
+            sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn179-btnEl"))).click()
             print("Normal booking booked.")
         elif action == action_logout:
             # CLICK GOING
+            sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn159-btnEl"))).click()
             # CLICK SAVE BUTTON
+            sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn179-btnEl"))).click()
             print("Logged out.")
         elif action == action_check_time:
@@ -112,10 +130,13 @@ def do_bmd_stuff(action, headless=True):
 
         # TODO Logout. bc -> The max. number of 5 zulässigen Datenbankverbindungen pro Benutzer wurde überschritten!
         # CLICK USER
-        # WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBtnCMDUser77-btnInnerEl"))).click()
+        sleep()
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBtnCMDUser77-btnInnerEl"))).click()
         # CLICK LOGOOUT
-        # WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBar68ItemCMDLogout-itemEl"))).click()
-        # print("Logged out. Quitting Driver.")
+        sleep()
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBar68ItemCMDLogout-itemEl"))).click()
+        print("Logged out. Quitting Driver.")
+
         driver.quit()
         return day_debit_float, day_so_far_float
 
