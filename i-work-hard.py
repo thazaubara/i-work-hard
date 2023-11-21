@@ -29,6 +29,9 @@ day_now = now.strftime("%A")
 
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+# just init values, get overridden by argparse.
+verbose = True
+headless = True
 
 def sleep():
     wait_because_bmd_is_slow = 1
@@ -160,7 +163,8 @@ def create_file_if_not_exists():
             json.dump([], file)
         print_log(f"logs.txt did not exist. I created one for you at {os.getcwd()}")
     else:
-        print_log(f"logs.txt found in {os.getcwd()}")
+        if verbose:
+            print_log(f"logs.txt found in {os.getcwd()}")
 
 def file_get_last_entry():
     content = []
@@ -206,6 +210,7 @@ def print_log(message):
     print(f"I WORK HARD at {date_now} {time_now} -> {message}")
 
 def main():
+    global verbose, headless
     parser = argparse.ArgumentParser(description='BMD Buchung')
     parser.add_argument('-v', action='store_true', help='verbose output. print everything.')
     parser.add_argument('-w', action='store_true', default=False, help='run in windowed mode. no headless browser.')
