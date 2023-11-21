@@ -102,7 +102,7 @@ def do_bmd_stuff(action, headless=True):
             # CLICK SAVE BUTTON
             sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn179-btnEl"))).click()
-            print("Homeoffice booked.")
+            print_log("Homeoffice booked.")
         elif action == action_normalbuchung:
             # CLICK POSTING TYPE
             sleep()
@@ -113,7 +113,7 @@ def do_bmd_stuff(action, headless=True):
             # CLICK SAVE BUTTON
             sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn179-btnEl"))).click()
-            print("Normal booking booked.")
+            print_log("Normal booking booked.")
         elif action == action_logout:
             # CLICK GOING
             sleep()
@@ -121,7 +121,7 @@ def do_bmd_stuff(action, headless=True):
             # CLICK SAVE BUTTON
             sleep()
             WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn179-btnEl"))).click()
-            print("Logged out.")
+            print_log("Go home.")
         elif action == action_check_time:
             print(f"Just checked Time.")
             pass
@@ -135,13 +135,13 @@ def do_bmd_stuff(action, headless=True):
         # CLICK LOGOOUT
         sleep()
         WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBar68ItemCMDLogout-itemEl"))).click()
-        print("Logged out. Quitting Driver.")
+        print_log("Logged out. Quitting Driver.")
 
         driver.quit()
         return day_debit_float, day_so_far_float
 
     except Exception as e:
-        print_log("Error in Script. Exiting.")
+        print_log(f"Error in Script. Exiting.")
         print(e)
         sys.exit(1)
 
@@ -159,6 +159,8 @@ def create_file_if_not_exists():
         with open("logs.txt", "w") as file:
             json.dump([], file)
         print_log(f"logs.txt did not exist. I created one for you at {os.getcwd()}")
+    else:
+        print_log(f"logs.txt found in {os.getcwd()}")
 
 def file_get_last_entry():
     content = []
