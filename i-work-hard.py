@@ -244,7 +244,7 @@ def main():
         result_time = now + timedelta(hours=day_debit)
         day_ends = result_time.strftime('%H:%M')
 
-        print_log(f"Starting {action} at {time_now}, ending at {day_ends}")
+        print(f"Starting {action} at {time_now}, ending at {day_ends}")
         if day_debit == 0.0:
             new_entry = {"date": date_now, "day": day_now, "action": "cancel booking", "start": time_now, "end": day_ends, "finished": "yes"}
         else:
@@ -271,7 +271,7 @@ def main():
             if verbose:
                 print_log(f"Do more work. Can go home in {time_left_string}")
         else:
-            print_log(f"Feierabend!")
+            print(f"Feierabend!")
             do_bmd_stuff(action_logout, headless=headless)
             # TODO: do_bmd_stuff() with action_logout
             last_entry["finished"] = "yes"
