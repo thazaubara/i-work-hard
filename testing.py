@@ -1,6 +1,9 @@
 import sys
+
+from httpcore import TimeoutException
 from selenium import webdriver
 from selenium import webdriver
+from selenium.common import UnexpectedAlertPresentException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -37,6 +40,7 @@ print(f"Loading {BMD_URL}")
 driver.get(BMD_URL)
 
 def logout_quitdriver():
+    print("performing logout action.")
     # CLICK USER
     sleep()
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBtnCMDUser77-btnInnerEl"))).click()
@@ -45,6 +49,7 @@ def logout_quitdriver():
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBar68ItemCMDLogout-itemEl"))).click()
     print("Logged out. Quitting Driver.")
     driver.quit()
+    sys.exit(0)
 
 # FILL CREDENTIALS
 try:
@@ -62,11 +67,16 @@ try:
     loginbutton = driver.find_element(By.ID, "loginbutton-btnEl")
     loginbutton.click()
     print("Clicked Login Button")
+except TimeoutException as e:
+    print("You lose. Max Retries reached.")
+    print(e.msg)
+    print(e)
+    logout_quitdriver()
 except Exception as e:
     print("Login Button click failed. You lost 1 Life.")
     print(e)
 
-# CLICK THE LEA BUTTON (Eng: SEA)
+# CLICK THE LEA BUTTON (Eng: SEB)
 try:
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "TileButtonPKG584-btnWrap"))).click()
     print("Clicked LEA Button")
@@ -75,19 +85,22 @@ except Exception as e:
     print(e)
     logout_quitdriver()
 
-# CLICK THE SINGLE RECORDING BUTTON
+# CLICK THE DAILY SERVICE ENTRY BUTTON
 try:
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "TileButtonCID29166-btnWrap"))).click()
-    print("Clicked Single Recording Button")
+    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "TileButtonCID30577-btnWrap"))).click()
+    print("Clicked daily Button")
 except Exception as e:
-    print("Single Recording Button click failed. You probably lost 1 Life.")
+    print("Daily Button click failed. You probably lost 1 Life.")
     print(e)
     logout_quitdriver()
 
-# CLICK THE "NEW" BUTTON
+# CLICK THE NEW BUTTON
+
+sleep()
+
 try:
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "RibbonButtonExt195CID29597-btnEl"))).click()
-    print("Clicked New Button")
+    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "RibbonButtonExt214CID29597-btnEl"))).click()
+    print("Clicked new Button")
 except Exception as e:
     print("New Button click failed. You probably lost 1 Life.")
     print(e)
@@ -97,35 +110,50 @@ except Exception as e:
 # sometime there is a popup with text (Please note that the services from 1. January 2024 have not yet been completed!) after the "New" button is clicked
 # check if it is there and close it, if not continue as usual
 try:
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "MsgBoxBtn0_2859462034720112_1"))).click()
+    WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.ID, "MsgBoxBtn0_2859462034720112_1-btnWrap"))).click()
     print("Found & clicked Infobox Button")
 except Exception as e:
     print("No infobox found. Continue as usual.")
 
-# INPUT LEA STUFF
-"""
-Customer: AttrFieldCmbFieldContainer3488384713005013CID4013623UID378-inputEl
-Activity: AttrFieldCmbFieldContainer3488384713005013CID4013321UID379-inputEl
-Hours: AttrFieldTimeFieldContainer3488384713005013CID4018896UID382-inputEl
-Auto. Hours: AttrBtnF8FieldContainer3488384713005013CID4018896UID382-btnWrap
-"""
+def input_lea_stuff(projekt_nr, tatigkeit_nr, time=None):
+    sleep()
+    # INPUT LEA STUFF
+    try:
+        # input project number
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTextFieldContainer3488384713005001CID4018874UID189-inputEl"))).send_keys(projekt_nr)
+        # AttrFieldTextFieldContainer3488384713005001CID4004645UID190
+        # input customer number
+        # filled automatically from bmd :D
 
-try:
-    # STUPID KEYPRESSES. bc it gets reset to 0:00 after click outside input_field.
-    # WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTimeFieldContainer3488384713005013CID4018896UID382-inputEl"))).send_keys(Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE, "10:00")
-    # OR: CLICK AUTO TIME BOOKING
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrBtnF8FieldContainer3488384713005013CID4018896UID382-btnWrap"))).click()
+        # input tätigkeit number
+        txt_tatigkeit = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTextFieldContainer3488384713005001CID4013321UID193-inputEl")))
+        txt_tatigkeit.send_keys(tatigkeit_nr, Keys.TAB)
 
-    t.sleep(2)  # wait bc apparently input fields get loaded afterwards? XD
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldCmbFieldContainer3488384713005013CID4013623UID378-inputEl"))).send_keys("200127")
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldCmbFieldContainer3488384713005013CID4013321UID379-inputEl"))).send_keys("1902")
+        if time is None:
+            # click three buttons - lifehack
+            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTimeFieldContainer3488384713005001CID4018896UID195-trigger-f8"))).click()
+        else:
+            txt_time = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTimeFieldContainer3488384713005001CID4018896UID195-inputEl")))
+            txt_time.send_keys(Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE, time)
 
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "RibbonButtonExt393CID675504-btnEl"))).click()
-    print("Input LEA stuff done.")
+        # click save button, give time to check if everything is ok
+        sleep()
+        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "button-1085-btnEl"))).click()
+        sleep()
 
-except Exception as e:
-    print("Input LEA stuff failed. You probably lost 1 Life.")
-    logout_quitdriver()
+        if time is None:
+            print(f"LEA entry [Restzeit] for Projekt {projekt_nr} and Tätigkeit {tatigkeit_nr} saved.")
+        else:
+            print(f"LEA entry [{time}] for Projekt {projekt_nr} and Tätigkeit {tatigkeit_nr} saved.")
+
+    except Exception as e:
+        print(e)
+
+input_lea_stuff("2127099", "1902", "3:00")
+input_lea_stuff("2130000", "1902")
+
+
+sleep()
 
 print("Done. ")
-sleep()
+logout_quitdriver()
