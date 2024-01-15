@@ -6,6 +6,7 @@ import bmd_credentials as credentials
 import sys
 import time as t
 
+import lea as lea
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -114,7 +115,7 @@ def read_from_info_table(driver, label_text):
     :return:
     """
     try:
-        element = element = WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{label_text}')]/../../..//input")))
+        element = WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{label_text}')]/../../..//input")))
         value = element.get_attribute("value").strip()
         log(f"Label {label_text}: {value}")  # do not print password, only log that is has been filled.
         return value
@@ -313,6 +314,7 @@ def main():
             do_bmd_stuff(action_going, headless=headless)
             last_entry["finished"] = "yes"
             last_entry["logout_time"] = time_now
+            lea.perform_lea()
             file_update_last_entry(last_entry)
 
 if __name__ == '__main__':

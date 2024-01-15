@@ -18,28 +18,116 @@ BMD_USER = credentials.BMD_USER
 BMD_PASS = credentials.BMD_PASS
 BMD_URL = credentials.BASE_URL
 
-def sleep():
-    wait_because_bmd_is_slow = 1
-    t.sleep(wait_because_bmd_is_slow)
+MY_NAME = credentials.BMD_MY_NAME
 
-print(f"Using Python Version: {sys.version}")
-print("Selenium Version: " + webdriver.__version__)
+now = datetime.now()
+date_now = now.strftime("%d.%m.%Y")
+time_now = now.strftime("%H:%M")
+day_now = now.strftime("%A")
 
-options = webdriver.ChromeOptions()
-options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
-options.add_argument("--window-size=1300,800")
+verbose = True
+headless = True
 
-driver = webdriver.Chrome(options=options)
-width = driver.get_window_size().get("width")
-height = driver.get_window_size().get("height")
-print(f"driver set to {width}x{height}")
+def sleep(time=1):
+    t.sleep(time)
 
-# GO TO SITE
-base_url = "https://finanz.value-one.com/bmdweb2"
-print(f"Loading {BMD_URL}")
-driver.get(BMD_URL)
+def log(message):
+    if verbose:
+        print(f"I WORK HARD at {date_now} {time_now} -> {message}")
 
-def logout_quitdriver():
+
+def init():
+    print(f"Using Python Version: {sys.version}")
+    print("Selenium Version: " + webdriver.__version__)
+
+    options = webdriver.ChromeOptions()
+    options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
+    options.add_argument("--window-size=1300,1000")
+
+    if headless:
+        options.add_argument("--start-maximized")
+        options.add_argument("--headless")
+
+    driver = webdriver.Chrome(options=options)
+    width = driver.get_window_size().get("width")
+    height = driver.get_window_size().get("height")
+    print(f"driver set to {width}x{height}")
+
+    # GO TO SITE
+    base_url = "https://finanz.value-one.com/bmdweb2"
+    print(f"Loading {BMD_URL}")
+    driver.get(BMD_URL)
+    return driver
+
+
+def find_click_button(driver, button_text):
+    """
+    this only works on span elements
+    tires to find a span element with given text and attempts to click it
+    it it fails, it tries to signn off
+    remember: you only have 5 login requets per timeframe
+    """
+
+    sleep()  # because BMD is f*cking slow
+
+    try:
+        # (By.XPATH, "//input[@placeholder='User Name']")
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{button_text}')]")))
+        element.click()
+        log(f"Clicked element with text '{button_text}'")
+        return
+    except Exception as e:
+        log(f"Could not find element with text '{button_text}'")
+
+    try:
+        log("TRYING EMERGENCY EXIT to not lose a login request")
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{MY_NAME}')]")))
+        element.click()
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'Sign off')]")))
+        element.click()
+        log("Emergency exit (Sign off) successful.")
+    except Exception as e:
+        log("Emergency exit (Sign off) failed. You probably lost 1 login request")
+
+def find_fill_input(driver, placeholder_text, text_to_fill):
+    """
+    this only works on input elements
+    tires to find a input element with given placeholder text and attempts to fill it with text_to_fill
+    it it fails, it tries to signn off
+    remember: you only have 5 login requets per timeframe
+    :param driver:
+    :param placeholder_text:
+    :param text_to_fill:
+    :return:
+    """
+
+    sleep()  # because BMD is f*cking slow
+    try:
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//input[@placeholder='{placeholder_text}']")))
+        element.send_keys(text_to_fill)
+        log(f"Filled input with placeholder '{placeholder_text}'")  # do not print password, only log that is has been filled.
+        return
+    except Exception as e:
+        log(f"Could not find input with placeholder '{placeholder_text}'")
+
+    try:
+        log("TRYING EMERGENCY EXIT to not lose a login request")
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{MY_NAME}')]")))
+        element.click()
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'Sign off')]")))
+        element.click()
+        log("Emergency exit (Sign off) successful.")
+    except Exception as e:
+        log("Emergency exit (Sign off) failed. You probably lost 1 login request")
+
+def find_dismiss_popup(driver):
+    try:
+        WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(@id, 'MsgBoxBtn') and text()='OK']"))).click()
+        log("Found & clicked Infobox Button")
+    except Exception as e:
+        log("No infobox found. Continue as usual.")
+
+def logout_quitdriver(driver):
     print("performing logout action.")
     # CLICK USER
     sleep()
@@ -49,96 +137,61 @@ def logout_quitdriver():
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBar68ItemCMDLogout-itemEl"))).click()
     print("Logged out. Quitting Driver.")
     driver.quit()
+    sleep()
     sys.exit(0)
 
-# FILL CREDENTIALS
-try:
-    txt_username = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "txtuser-inputEl")))
-    txt_username.send_keys(BMD_USER)
-    txt_password = driver.find_element(By.ID, "txtpass-inputEl")
-    txt_password.send_keys(BMD_PASS)
-    print("Credentials filled.")
-except Exception as e:
-    print("Credential input failed. You lost 1 Life.")
-    print(e)
+def input_lea_stuff(driver, projekt_nr, tatigkeit_nr, time=None):
+    # CLICK THE NEW BUTTON
+    find_click_button(driver, "New")
 
-# CLICK THE LOGIN BUTTON
-try:
-    loginbutton = driver.find_element(By.ID, "loginbutton-btnEl")
-    loginbutton.click()
-    print("Clicked Login Button")
-except TimeoutException as e:
-    print("You lose. Max Retries reached.")
-    print(e.msg)
-    print(e)
-    logout_quitdriver()
-except Exception as e:
-    print("Login Button click failed. You lost 1 Life.")
-    print(e)
+    # DISMISS THE POPUP IF THERE
+    # sometime there is a popup with text (Please note that the services from 1. January 2024 have not yet been completed!) after the "New" button is clicked
+    # check if it is there and close it, if not continue as usual
+    find_dismiss_popup(driver)
 
-# CLICK THE LEA BUTTON (Eng: SEB)
-try:
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "TileButtonPKG584-btnWrap"))).click()
-    print("Clicked LEA Button")
-except Exception as e:
-    print("LEA Button click failed. You probably lost 1 Life.")
-    print(e)
-    logout_quitdriver()
-
-# CLICK THE DAILY SERVICE ENTRY BUTTON
-try:
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "TileButtonCID30577-btnWrap"))).click()
-    print("Clicked daily Button")
-except Exception as e:
-    print("Daily Button click failed. You probably lost 1 Life.")
-    print(e)
-    logout_quitdriver()
-
-# CLICK THE NEW BUTTON
-
-sleep()
-
-try:
-    WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "RibbonButtonExt214CID29597-btnEl"))).click()
-    print("Clicked new Button")
-except Exception as e:
-    print("New Button click failed. You probably lost 1 Life.")
-    print(e)
-    logout_quitdriver()
-
-# DISMISS THE POPUP IF THERE
-# sometime there is a popup with text (Please note that the services from 1. January 2024 have not yet been completed!) after the "New" button is clicked
-# check if it is there and close it, if not continue as usual
-try:
-    WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.ID, "MsgBoxBtn0_2859462034720112_1-btnWrap"))).click()
-    print("Found & clicked Infobox Button")
-except Exception as e:
-    print("No infobox found. Continue as usual.")
-
-def input_lea_stuff(projekt_nr, tatigkeit_nr, time=None):
     sleep()
+    # display STATS
+    overall = driver.find_element(By.XPATH, f"//label[contains(text(), 'Overall')]//../label[2]").text
+    remaining = driver.find_element(By.XPATH, f"//label[contains(text(), 'Overall')]//../label[4]").text
+    log(f"Overall: {overall}, Remaining: {remaining}")
+
+    def convert_time_to_decimal(time_str):
+        hours, minutes = map(int, time_str.split(":"))
+        decimal_time = hours + minutes / 60.0
+        return decimal_time
+
     # INPUT LEA STUFF
     try:
         # input project number
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTextFieldContainer3488384713005001CID4018874UID189-inputEl"))).send_keys(projekt_nr)
-        # AttrFieldTextFieldContainer3488384713005001CID4004645UID190
-        # input customer number
-        # filled automatically from bmd :D
+        sleep()
+        txt_project_number = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.XPATH, f"//input[contains(@name, 'MCA_LEI_ORG_PROJEKTNR')]")))
+        txt_project_number.send_keys(projekt_nr + Keys.ENTER)
 
         # input tätigkeit number
-        txt_tatigkeit = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTextFieldContainer3488384713005001CID4013321UID193-inputEl")))
-        txt_tatigkeit.send_keys(tatigkeit_nr, Keys.TAB)
+        sleep()
+        txt_tatigkeit = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//input[contains(@name, 'MCA_LEI_ARL_ARTIKELNR')]")))
+        txt_tatigkeit.send_keys(tatigkeit_nr, Keys.TAB, Keys.TAB)  # tab so that time field is in view and rendered
 
+        # input time
+        sleep()
         if time is None:
             # click three buttons - lifehack
-            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTimeFieldContainer3488384713005001CID4018896UID195-trigger-f8"))).click()
+            three_points = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//input[contains(@name, 'MCU_LEI_STUNDEN_EINGABE')]//../../div[contains(@class, 'pictos')]")))
+            three_points.click()
+            log("Clicked three points button")
         else:
-            txt_time = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTimeFieldContainer3488384713005001CID4018896UID195-inputEl")))
+            if convert_time_to_decimal(time) > convert_time_to_decimal(remaining):
+                log(f"ERROR: You tried to input more time than remaining. {time} > {remaining}")
+                sleep()
+                find_click_button(driver, "Cancel")
+                sleep(3)
+                return
+            txt_time = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//input[contains(@name, 'MCU_LEI_STUNDEN_EINGABE')]")))
             txt_time.send_keys(Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE, Keys.BACKSPACE, time)
 
         # click save button, give time to check if everything is ok
         sleep()
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "button-1085-btnEl"))).click()
+        find_click_button(driver, "Save")
         sleep()
 
         if time is None:
@@ -149,11 +202,21 @@ def input_lea_stuff(projekt_nr, tatigkeit_nr, time=None):
     except Exception as e:
         print(e)
 
-input_lea_stuff("2127099", "1902", "3:00")
-input_lea_stuff("2130000", "1902")
+def perform_lea():
+    driver = init()
+    # FILL CREDENTIALS
+    find_fill_input(driver, "User name", BMD_USER)
+    find_fill_input(driver, "Password", BMD_PASS)
+    find_click_button(driver, "Login")
 
+    # CLICK THE LEA BUTTON (Eng: SEB)
+    find_click_button(driver, "SEB")
+    find_click_button(driver, "Daily service entry")
 
-sleep()
+    input_lea_stuff(driver, "2127099", "1902", "3:00")
+    input_lea_stuff(driver, "2130000", "1902")
 
-print("Done. ")
-logout_quitdriver()
+    sleep()
+
+    print("Done. ")
+    logout_quitdriver()
