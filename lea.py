@@ -219,5 +219,5 @@ def perform_lea():
 
 if __name__ == "__main__":
     verbose = True
-    headless = True
+    headless = False
     perform_lea()
