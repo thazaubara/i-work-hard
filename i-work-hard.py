@@ -17,8 +17,8 @@ BMD_USER = credentials.BMD_USER
 BMD_PASS = credentials.BMD_PASS
 BMD_URL = credentials.BASE_URL
 
-# MO=0, DI=1, MI=2, DO=3, FR=4, SA=5, SO=6
-HOMEOFFICE_DAYS = [0, 1, 2, 4]
+
+HOMEOFFICE_DAYS = credentials.HOMEOFFICE_DAYS
 MY_NAME = credentials.BMD_MY_NAME
 
 action_homeoffice = "homeoffice"
