@@ -1,13 +1,9 @@
-import sys
 
-from httpcore import TimeoutException
 from selenium import webdriver
-from selenium import webdriver
-from selenium.common import UnexpectedAlertPresentException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from datetime import datetime, time, timedelta
+from datetime import datetime
 from selenium.webdriver.common.keys import Keys
 
 import bmd_credentials as credentials
