@@ -17,9 +17,13 @@ BMD_USER = credentials.BMD_USER
 BMD_PASS = credentials.BMD_PASS
 BMD_URL = credentials.BASE_URL
 
+# MO=0, DI=1, MI=2, DO=3, FR=4, SA=5, SO=6
+HOMEOFFICE_DAYS = [0, 1, 2, 4]
+MY_NAME = credentials.BMD_MY_NAME
+
 action_homeoffice = "homeoffice"
 action_normalbuchung = "normalbuchung"
-action_logout = "logout"
+action_going = "logout"
 action_check_time = "check_time"
 
 now = datetime.now()
@@ -31,13 +35,93 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # just init values, get overridden by argparse.
 verbose = True
-headless = True
+headless = False
 
 def sleep():
     wait_because_bmd_is_slow = 1
     t.sleep(wait_because_bmd_is_slow)
 
-def do_bmd_stuff(action, headless=True):
+def find_click_button(driver, button_text):
+    """
+    this only works on span elements
+    tires to find a span element with given text and attempts to click it
+    it it fails, it tries to signn off
+    remember: you only have 5 login requets per timeframe
+    """
+
+    sleep()  # because BMD is f*cking slow
+
+    try:
+        # (By.XPATH, "//input[@placeholder='User Name']")
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{button_text}')]")))
+        element.click()
+        log(f"Clicked element with text '{button_text}'")
+        return
+    except Exception as e:
+        log(f"Could not find element with text '{button_text}'")
+
+    try:
+        log("TRYING EMERGENCY EXIT to not lose a login request")
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{MY_NAME}')]")))
+        element.click()
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'Sign off')]")))
+        element.click()
+        log("Emergency exit (Sign off) successful.")
+    except Exception as e:
+        log("Emergency exit (Sign off) failed. You probably lost 1 login request")
+
+def find_fill_input(driver, placeholder_text, text_to_fill):
+    """
+    this only works on input elements
+    tires to find a input element with given placeholder text and attempts to fill it with text_to_fill
+    it it fails, it tries to signn off
+    remember: you only have 5 login requets per timeframe
+    :param driver:
+    :param placeholder_text:
+    :param text_to_fill:
+    :return:
+    """
+
+    sleep()  # because BMD is f*cking slow
+    try:
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//input[@placeholder='{placeholder_text}']")))
+        element.send_keys(text_to_fill)
+        log(f"Filled input with placeholder '{placeholder_text}'")  # do not print password, only log that is has been filled.
+        return
+    except Exception as e:
+        log(f"Could not find input with placeholder '{placeholder_text}'")
+
+    try:
+        log("TRYING EMERGENCY EXIT to not lose a login request")
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{MY_NAME}')]")))
+        element.click()
+        element = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'Sign off')]")))
+        element.click()
+        log("Emergency exit (Sign off) successful.")
+    except Exception as e:
+        log("Emergency exit (Sign off) failed. You probably lost 1 login request")
+
+def read_from_info_table(driver, label_text):
+    """
+    Very specific function. reads the info table on the bootom of the page containing Day debit, week debit, etc ...
+    This is a very dumb html layout from BMD, which results in a very dumb xpath query.
+    finds the element with the given text. from there, go to the third parent (the div), and then down to find the input field. you can then get the value from there.
+
+    for debugging:
+    element = WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'Month debit')]/../../..//input"))).get_attribute("value").strip()
+
+    :param driver:
+    :return:
+    """
+    try:
+        element = element = WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{label_text}')]/../../..//input")))
+        value = element.get_attribute("value").strip()
+        log(f"Label {label_text}: {value}")  # do not print password, only log that is has been filled.
+        return value
+    except Exception as e:
+        log(f"Could not find values for label '{label_text}'")
+
+def do_bmd_stuff(action, headless):
     options = webdriver.ChromeOptions()
     options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
     options.add_argument("--window-size=1300,800")
@@ -49,104 +133,63 @@ def do_bmd_stuff(action, headless=True):
     driver = webdriver.Chrome(options=options)
     width = driver.get_window_size().get("width")
     height = driver.get_window_size().get("height")
-    print(f"driver set to {width}x{height}")
+    log(f"driver set to {width}x{height}")
 
     # GO TO SITE
-    base_url = "https://finanz.value-one.com/bmdweb2"
-    print(f"Loading {BMD_URL}")
+    log(f"Loading {BMD_URL}")
     driver.get(BMD_URL)
 
+    # FILL CREDENTIALS
+    find_fill_input(driver, "User name", BMD_USER)
+    find_fill_input(driver, "Password", BMD_PASS)
+
+    # NAVIGATE TO POST TOUCH
+    find_click_button(driver, "Login")
+    find_click_button(driver, "Time")
+    find_click_button(driver, "Post Touch")
+
+    # GET WORKING TIME TODAY
+    sleep()
+    day_debit = read_from_info_table(driver, "Day debit")
+    # day_debit = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTextFieldContainer7612734691278121CID4089024UID184-inputEl"))).get_attribute("value")
+    # day_so_far = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTextFieldContainer7612734691278121CID4089025UID185-inputEl"))).get_attribute("value")
+    day_so_far = read_from_info_table(driver, "Day so far")
+    balance = read_from_info_table(driver, "Balance")
+
+
     try:
-        # FILL CREDENTIALS
-        #txt_username = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "txtuser - inputEl")))
-        txt_username = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "txtuser-inputEl")))
-        txt_username.send_keys(BMD_USER)
-        txt_password = driver.find_element(By.ID, "txtpass-inputEl")
-        txt_password.send_keys(BMD_PASS)
-
-        # CLICK THE LOGIN BUTTON
-        loginbutton = driver.find_element(By.ID, "loginbutton-btnEl")
-        loginbutton.click()
-
-        # CLICK THE TIME BUTTON#
-        sleep()
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "TileButtonPKG564-btnWrap"))).click()
-        print("Login Successful.")
-
-        # CLICK THE POST TOUCH BUTTON
-        sleep()
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "TileButtonCID31513-btnWrap"))).click()
-
-        # GET WORKING TIME TODAY
-        day_debit = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTextFieldContainer7612734691278121CID4089024UID184-inputEl"))).get_attribute("value")
-        day_so_far = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "AttrFieldTextFieldContainer7612734691278121CID4089025UID185-inputEl"))).get_attribute("value")
-
-        day_debit_float = 0.0
-        day_so_far_float = 0.0
-
-        try:
-            hours, minutes = map(int, day_debit.split(':'))
-            day_debit_float = hours + minutes / 60.0
-            hours, minutes = map(int, day_so_far.split(':'))
-            day_so_far_float = hours + minutes / 60.0
-        except:
-            print("Error parsing time. Exiting.")
-            sys.exit(1)
-
-        # print(f"Day debit: {day_debit_float}")
-
-        if action == action_homeoffice:
-            # CLICK POSTING TYPE
-            sleep()
-            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn162-btnEl"))).click()
-            # CLICK "HOMEOFFICE"
-            sleep()
-            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn287-btnEl"))).click()
-            # CLICK SAVE BUTTON
-            sleep()
-            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn179-btnEl"))).click()
-            print_log("Homeoffice booked.")
-        elif action == action_normalbuchung:
-            # CLICK POSTING TYPE
-            sleep()
-            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn162-btnEl"))).click()
-            # CLICK "NORMAL BOOKING"
-            sleep()
-            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn281-btnEl"))).click()
-            # CLICK SAVE BUTTON
-            sleep()
-            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn179-btnEl"))).click()
-            print_log("Normal booking booked.")
-        elif action == action_logout:
-            # CLICK GOING
-            sleep()
-            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn159-btnEl"))).click()
-            # CLICK SAVE BUTTON
-            sleep()
-            WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "ButtonFrameBtn179-btnEl"))).click()
-            print_log("Go home.")
-        elif action == action_check_time:
-            print(f"Just checked Time.")
-            pass
-        else:
-            print("Unknown action. Returning.")
-
-        # TODO Logout. bc -> The max. number of 5 zulässigen Datenbankverbindungen pro Benutzer wurde überschritten!
-        # CLICK USER
-        sleep()
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBtnCMDUser77-btnInnerEl"))).click()
-        # CLICK LOGOOUT
-        sleep()
-        WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBar68ItemCMDLogout-itemEl"))).click()
-        print_log("Logged out. Quitting Driver.")
-
-        driver.quit()
-        return day_debit_float, day_so_far_float
-
+        hours, minutes = map(int, day_debit.split(':'))
+        day_debit_float = hours + minutes / 60.0
+        hours, minutes = map(int, day_so_far.split(':'))
+        day_so_far_float = hours + minutes / 60.0
     except Exception as e:
-        print_log(f"Error in Script. Exiting.")
-        print(e)
+        log("Error parsing time. Exiting.")
         sys.exit(1)
+
+    # ACTION DEPENDENT BUTTON CLICKS
+    if action == action_homeoffice:
+        find_click_button(driver, "Posting type")
+        find_click_button(driver, "HOMEOFFICE")
+        find_click_button(driver, "Save")
+    elif action == action_normalbuchung:
+        find_click_button(driver, "Posting type")
+        find_click_button(driver, "Normal Booking")
+        find_click_button(driver, "Save")
+    elif action == action_going:
+        find_click_button(driver, "Going")
+        find_click_button(driver, "Save")
+    elif action == action_check_time:
+        log(f"Just checked Time.")
+        pass
+    else:
+        log("Unknown action. Returning.")
+
+    # SIGN OFF
+    find_click_button(driver, MY_NAME)
+    find_click_button(driver, "Sign off")
+
+    driver.quit()
+    return day_debit_float, day_so_far_float
 
 def weekend():
     return now.weekday() in [5, 6]  # is saturday or sunday
@@ -161,10 +204,10 @@ def create_file_if_not_exists():
     if not os.path.exists("logs.txt"):
         with open("logs.txt", "w") as file:
             json.dump([], file)
-        print_log(f"logs.txt did not exist. I created one for you at {os.getcwd()}")
+        log(f"logs.txt did not exist. I created one for you at {os.getcwd()}")
     else:
         if verbose:
-            print_log(f"logs.txt found in {os.getcwd()}")
+            log(f"logs.txt found in {os.getcwd()}")
 
 def file_get_last_entry():
     content = []
@@ -204,10 +247,11 @@ def first_entry_today():
         return False
 
 def homeoffice():
-    return now.weekday() in [1, 2, 4]  # is monday or thursday
+    return now.weekday() in HOMEOFFICE_DAYS
 
-def print_log(message):
-    print(f"I WORK HARD at {date_now} {time_now} -> {message}")
+def log(message):
+    if verbose:
+        print(f"I WORK HARD at {date_now} {time_now} -> {message}")
 
 def main():
     global verbose, headless
@@ -218,16 +262,15 @@ def main():
     verbose = args.v
     headless = not args.w
 
-
     create_file_if_not_exists()
 
     if weekend():
         if verbose:
-            print_log('Weekend!')
+            log('Weekend!')
         return
     if not core_time():
         if verbose:
-            print_log('Not core time!')
+            log('Not core time!')
         return
     if first_entry_today():
         if homeoffice():
@@ -235,16 +278,11 @@ def main():
         else:
             action = action_normalbuchung
         day_debit, day_so_far = do_bmd_stuff(action, headless=headless)
-        # TODO: do_bmd_stuff() with action.
-        # TODO: also quit booking if day_debit is 0.0, but still return day_debit and day_so_far
-
-        #day_debit = 8.0
-        #day_sofar = 0.0
 
         result_time = now + timedelta(hours=day_debit)
         day_ends = result_time.strftime('%H:%M')
 
-        print(f"Starting {action} at {time_now}, ending at {day_ends}")
+        log(f"Started {action} at {time_now}, ending at {day_ends}")
         if day_debit == 0.0:
             new_entry = {"date": date_now, "day": day_now, "action": "cancel booking", "start": time_now, "end": day_ends, "finished": "yes"}
         else:
@@ -256,7 +294,7 @@ def main():
         last_entry = file_get_last_entry()
         if last_entry["finished"] == "yes":
             if verbose:
-                print_log("Day is finished. Nothing to do.")
+                log("Day is finished. Nothing to do.")
             return
 
         string_time = last_entry['end']
@@ -269,15 +307,13 @@ def main():
             minutes = remainder // 60
             time_left_string = f"{hours:02}:{minutes:02}"
             if verbose:
-                print_log(f"Do more work. Can go home in {time_left_string}")
+                log(f"Do more work. Can go home in {time_left_string}")
         else:
-            print(f"Feierabend!")
-            do_bmd_stuff(action_logout, headless=headless)
-            # TODO: do_bmd_stuff() with action_logout
+            log(f"Feierabend!")
+            do_bmd_stuff(action_going, headless=headless)
             last_entry["finished"] = "yes"
             last_entry["logout_time"] = time_now
             file_update_last_entry(last_entry)
 
 if __name__ == '__main__':
     main()
-    # do_bmd_stuff(action_logout)
