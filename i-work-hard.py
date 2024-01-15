@@ -34,8 +34,8 @@ day_now = now.strftime("%A")
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # just init values, get overridden by argparse.
-verbose = credentials.VERBOSE
-headless = credentials.HEADLESS
+verbose = False
+headless = False
 
 def sleep():
     wait_because_bmd_is_slow = 1
