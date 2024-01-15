@@ -33,8 +33,8 @@ def log(message):
 
 
 def init(verbose=True, headless=False):
-    print(f"Using Python Version: {sys.version}")
-    print("Selenium Version: " + webdriver.__version__)
+    log(f"Using Python Version: {sys.version}")
+    log("Selenium Version: " + webdriver.__version__)
 
     options = webdriver.ChromeOptions()
     options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
@@ -123,14 +123,14 @@ def find_dismiss_popup(driver):
         log("No infobox found. Continue as usual.")
 
 def logout_quitdriver(driver):
-    print("performing logout action.")
+    log("performing logout action.")
     # CLICK USER
     sleep()
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBtnCMDUser77-btnInnerEl"))).click()
     # CLICK LOGOOUT
     sleep()
     WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.ID, "NavBar68ItemCMDLogout-itemEl"))).click()
-    print("Logged out. Quitting Driver.")
+    log("Logged out. Quitting Driver.")
     driver.quit()
     sleep()
     sys.exit(0)
@@ -191,12 +191,12 @@ def input_lea_stuff(driver, projekt_nr, tatigkeit_nr, time=None):
         sleep()
 
         if time is None:
-            print(f"LEA entry [Restzeit] for Projekt {projekt_nr} and Tätigkeit {tatigkeit_nr} saved.")
+            log(f"LEA entry [Restzeit] for Projekt {projekt_nr} and Tätigkeit {tatigkeit_nr} saved.")
         else:
-            print(f"LEA entry [{time}] for Projekt {projekt_nr} and Tätigkeit {tatigkeit_nr} saved.")
+            log(f"LEA entry [{time}] for Projekt {projekt_nr} and Tätigkeit {tatigkeit_nr} saved.")
 
     except Exception as e:
-        print(e)
+        log(e)
 
 def perform_lea(verbose=True, headless=False):
     driver = init(verbose, headless)
@@ -214,7 +214,7 @@ def perform_lea(verbose=True, headless=False):
 
     sleep()
 
-    print("Done. ")
+    log("Done. ")
     logout_quitdriver(driver)
 
 if __name__ == "__main__":
