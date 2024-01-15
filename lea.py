@@ -47,11 +47,10 @@ def init():
     driver = webdriver.Chrome(options=options)
     width = driver.get_window_size().get("width")
     height = driver.get_window_size().get("height")
-    print(f"driver set to {width}x{height}")
+    log(f"driver set to {width}x{height}")
 
     # GO TO SITE
-    base_url = "https://finanz.value-one.com/bmdweb2"
-    print(f"Loading {BMD_URL}")
+    log(f"Loading {BMD_URL}")
     driver.get(BMD_URL)
     return driver
 
@@ -137,6 +136,7 @@ def logout_quitdriver(driver):
     sys.exit(0)
 
 def input_lea_stuff(driver, projekt_nr, tatigkeit_nr, time=None):
+    sleep()
     # CLICK THE NEW BUTTON
     find_click_button(driver, "New")
 
@@ -215,4 +215,9 @@ def perform_lea():
     sleep()
 
     print("Done. ")
-    logout_quitdriver()
+    logout_quitdriver(driver)
+
+if __name__ == "__main__":
+    verbose = True
+    headless = True
+    perform_lea()
