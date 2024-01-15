@@ -314,6 +314,7 @@ def main():
             do_bmd_stuff(action_going, headless=headless)
             last_entry["finished"] = "yes"
             last_entry["logout_time"] = time_now
+            log(f"Starting LEA")
             lea.perform_lea()
             file_update_last_entry(last_entry)
 

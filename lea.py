@@ -32,7 +32,7 @@ def log(message):
         print(f"I WORK HARD at {date_now} {time_now} -> {message}")
 
 
-def init():
+def init(verbose=True, headless=False):
     print(f"Using Python Version: {sys.version}")
     print("Selenium Version: " + webdriver.__version__)
 
@@ -136,7 +136,7 @@ def logout_quitdriver(driver):
     sys.exit(0)
 
 def input_lea_stuff(driver, projekt_nr, tatigkeit_nr, time=None):
-    sleep()
+    sleep(3)
     # CLICK THE NEW BUTTON
     find_click_button(driver, "New")
 
@@ -198,8 +198,8 @@ def input_lea_stuff(driver, projekt_nr, tatigkeit_nr, time=None):
     except Exception as e:
         print(e)
 
-def perform_lea():
-    driver = init()
+def perform_lea(verbose=True, headless=False):
+    driver = init(verbose, headless)
     # FILL CREDENTIALS
     find_fill_input(driver, "User name", BMD_USER)
     find_fill_input(driver, "Password", BMD_PASS)
