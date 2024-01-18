@@ -304,11 +304,13 @@ def main():
 
 
 if __name__ == '__main__':
-    # main()
-    # bmd.verbose = True
-    # bmd.headless = False
+
     bmd.start_bmd(url=credentials.BASE_URL, user=credentials.BMD_USER, password=credentials.BMD_PASS)
-    bmd.perform_single_day_lea()
+    # bmd.perform_daily_lea()
     # bmd.book_normalbuchung()
+    my_projects = [{"projekt": "2130000", "tatigkeit": "1902", "stunden": "8"},  # remory
+                   {"projekt": "2127099", "tatigkeit": "1902", "stunden": "16"},  # reworkx
+                   {"projekt": "2127099", "tatigkeit": "1902"}]  # value one digital GmbH(Arbeitgeber) -> restliche stunden
+    bmd.perform_weekly_lea(my_projects)
     bmd.sign_off()
     pass

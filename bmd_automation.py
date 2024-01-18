@@ -231,6 +231,7 @@ def input_lea_stuff(projekt_nr, tatigkeit_nr, time=None):
  / _  // // (_ / _  / / /__/ _/ | |/ / _// /__
 /_//_/___/\___/_//_/ /____/___/ |___/___/____/
 Stuff that uses action to perfom specific tasks.
+These are built from the basic functions above.
 Prefereably use this in your main code.
 These are things like:
     - perform LEA entry
@@ -333,7 +334,7 @@ def book_going():
 
     return day_debit_float, day_so_far_float
 
-def perform_single_day_lea():
+def perform_daily_lea():
     navigate_to_home()
     find_click_button("SEB")
     find_click_button("Daily service entry")
@@ -358,3 +359,7 @@ def sign_off():
     driver.quit()
     log("Quitting driver")
 
+def perform_weekly_lea(projects):
+    log(f"Performing weekly LEA with: {projects}")
+    # TODO: write thsi stuff
+    pass
