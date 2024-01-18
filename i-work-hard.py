@@ -3,12 +3,15 @@ import json
 import os
 
 import bmd_credentials as credentials
+import bmd_automation as bmd
+
 import sys
 import time as t
 
 import lea as lea
 
 from selenium import webdriver
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -38,9 +41,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 verbose = False
 headless = False
 
-def sleep():
-    wait_because_bmd_is_slow = 1
-    t.sleep(wait_because_bmd_is_slow)
+
 
 def find_click_button(driver, button_text):
     """
@@ -102,25 +103,7 @@ def find_fill_input(driver, placeholder_text, text_to_fill):
     except Exception as e:
         log("Emergency exit (Sign off) failed. You probably lost 1 login request")
 
-def read_from_info_table(driver, label_text):
-    """
-    Very specific function. reads the info table on the bootom of the page containing Day debit, week debit, etc ...
-    This is a very dumb html layout from BMD, which results in a very dumb xpath query.
-    finds the element with the given text. from there, go to the third parent (the div), and then down to find the input field. you can then get the value from there.
 
-    for debugging:
-    element = WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'Month debit')]/../../..//input"))).get_attribute("value").strip()
-
-    :param driver:
-    :return:
-    """
-    try:
-        element = WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.XPATH, f"//span[contains(text(),'{label_text}')]/../../..//input")))
-        value = element.get_attribute("value").strip()
-        log(f"Label {label_text}: {value}")  # do not print password, only log that is has been filled.
-        return value
-    except Exception as e:
-        log(f"Could not find values for label '{label_text}'")
 
 def do_bmd_stuff(action, headless):
     options = webdriver.ChromeOptions()
@@ -321,4 +304,11 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    # bmd.verbose = True
+    # bmd.headless = False
+    bmd.start_bmd(url=credentials.BASE_URL, user=credentials.BMD_USER, password=credentials.BMD_PASS)
+    bmd.perform_single_day_lea()
+    # bmd.book_normalbuchung()
+    bmd.sign_off()
+    pass
