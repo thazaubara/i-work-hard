@@ -26,9 +26,11 @@ Because I am an honest worker, i start my day at 9:00 and end it at 17:00.
 
 Monday and Friday are office days, this should also be taken into account.
 
-The script writes a file, to keep track of its actions. There is no need to launch the whole selenium process over and over again. Just when it is time to actually do something (book time or log out.). There is no loop. I still need to check it every x minutes.
+There is no need to launch the whole selenium process over and over again. Just when it is time to actually do something (book time or log out.). There is no loop. I still need to check it every x minutes. Therefore it runs in crontab every 5 minutes.
 
-Therefore it runs in crontab every 5 minutes.
+The script writes a file, to keep track of its actions. 
+
+
 
 ![image-20231114160809927](./_images/image-20231114160809927.png)
 
@@ -86,6 +88,18 @@ This is now an unofficial script of our team at work. Yay i guess?
 3. Profit!
 
 Same as Fake Activity Recording, but with real values. Get the values from Jira API. The activity recording is performed on Fridays after working hours. To calculate something, you know. And its company policy.
+
+## Searching stuff via JQL:
+
+```python
+active = jira.search_issues('assignee=currentUser() AND Sprint in openSprints()')
+```
+
+https://support.atlassian.com/jira-service-management-cloud/docs/jql-fields/#Sprint
+
+
+
+
 
 
 

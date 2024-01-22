@@ -2,16 +2,16 @@ import argparse
 import json
 import os
 
-import bmd_credentials as credentials
+import credentials as cred
 import bmd_automation as bmd
 from datetime import datetime, time, timedelta
 
-BMD_USER = credentials.BMD_USER
-BMD_PASS = credentials.BMD_PASS
-BMD_URL = credentials.BASE_URL
+BMD_USER = cred.BMD_USER
+BMD_PASS = cred.BMD_PASS
+BMD_URL = cred.BASE_URL
 
-HOMEOFFICE_DAYS = credentials.HOMEOFFICE_DAYS
-MY_NAME = credentials.BMD_MY_NAME
+HOMEOFFICE_DAYS = cred.HOMEOFFICE_DAYS
+MY_NAME = cred.BMD_MY_NAME
 
 action_homeoffice = "homeoffice"
 action_normalbuchung = "normalbuchung"
@@ -119,7 +119,7 @@ def main():
 
     if first_entry_today():
         # First login today. Start time booking
-        bmd.start_bmd(url=credentials.BASE_URL, user=credentials.BMD_USER, password=credentials.BMD_PASS)
+        bmd.start_bmd(url=cred.BASE_URL, user=cred.BMD_USER, password=cred.BMD_PASS)
         if homeoffice():
             action = "homeoffice"
             log(f"Starting {action}")
@@ -160,7 +160,7 @@ def main():
             # log(f"Do more work. Can go home in {hours:02}:{minutes:02}")
         else:
             log(f"Feierabend!")
-            bmd.start_bmd(url=credentials.BASE_URL, user=credentials.BMD_USER, password=credentials.BMD_PASS)
+            bmd.start_bmd(url=cred.BASE_URL, user=cred.BMD_USER, password=cred.BMD_PASS)
             bmd.book_going()
             last_entry["finished"] = "yes"
             last_entry["logout_time"] = time_now
