@@ -4,6 +4,7 @@ import os
 
 import credentials as cred
 import bmd_automation as bmd
+import jira_automation as jira
 from datetime import datetime, time, timedelta
 
 BMD_USER = cred.BMD_USER
@@ -26,8 +27,6 @@ day_now = now.strftime("%A")
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 # just init values, get overridden by argparse.
-verbose = False
-headless = False
 
 def weekend():
     return now.weekday() in [5, 6]  # is saturday or sunday
@@ -100,14 +99,6 @@ def main():
     This is the logic behind time booking. Timed stuff.
     :return:
     """
-    global verbose, headless
-    parser = argparse.ArgumentParser(description='BMD Buchung')
-    parser.add_argument('-v', action='store_true', help='verbose output. print everything.')
-    parser.add_argument('-w', action='store_true', default=False, help='run in windowed mode. no headless browser.')
-    args = parser.parse_args()
-    verbose = args.v
-    headless = not args.w
-
     create_file_if_not_exists()
 
     if weekend():
@@ -171,7 +162,23 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    global verbose, headless
+    parser = argparse.ArgumentParser(description='BMD Buchung')
+    parser.add_argument('-v', action='store_true', default=False, help='verbose output. print everything.')
+    parser.add_argument('-w', action='store_true', default=False, help='run in windowed mode. no headless browser.')
+    parser.add_argument('-j', action='store_true', default=False, help='get times for LEA from jira.')
+    args = parser.parse_args()
+    verbose = args.v
+    headless = not args.w
+
+    if args.j:
+        times = jira.get_project_hours(cred.JIRA_USER, print_verbose=False)
+        # bmd.start_bmd(url=cred.BASE_URL, user=cred.BMD_USER, password=cred.BMD_PASS)
+        lea_projects = bmd.convert_to_lea_projects(times)
+        # bmd.perform_weekly_lea(times)
+
+
+    # main()
 
     """
     bmd.start_bmd(url=credentials.BASE_URL, user=credentials.BMD_USER, password=credentials.BMD_PASS)

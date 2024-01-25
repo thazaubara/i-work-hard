@@ -8,6 +8,15 @@ from datetime import datetime, timedelta, timezone
 
 import credentials as cred
 
+verbose = False
+
+def log(message):
+    if verbose:
+        now = datetime.now()
+        date_now = now.strftime("%d.%m.%Y")
+        time_now = now.strftime("%H:%M")
+        print(f"I WORK HARD at {date_now} {time_now} -> {message}")
+
 def printIssues(issues):
     for issue in issues:
         print(f"{issue.key} | {issue.fields.summary} [{issue.fields.customfield_10016} h]")
@@ -89,28 +98,50 @@ def is_done_this_week(string):
     else:
         return False
 
+def list_users():
+    """
+    dumb method. because I don't know how to query users yet.
+    may take a looooooooong time if more issues are present.
+    :return:
+    """
+    jira = JIRA(server="https://value-one.atlassian.net", basic_auth=(cred.JIRA_USER, cred.JIRA_TOKEN))
+    all_stories = jira.search_issues('issuetype=Story')
+    users = set()
 
-def get_project_hours(assignee):
+    for story in all_stories:
+        user = story.fields.assignee
+        if user is not None:
+            users.add(story.fields.assignee)
+
+    print(f"\n{'─' * 50}\nFOUND {len(users)} USERS AMONG ALL ISSUES")
+    for user in users:
+        name = user.raw.get("displayName", "None")
+        mail = user.raw.get("emailAddress", "None")
+        print(f"  {name} ({mail})")
+
+def get_project_hours(assignee, print_verbose=False):
+    global verbose
+    verbose = print_verbose
     jira = JIRA(server="https://value-one.atlassian.net", basic_auth=(cred.JIRA_USER, cred.JIRA_TOKEN))
     all_open_issues = jira.search_issues(f'assignee="{assignee}" AND Sprint in openSprints() ORDER BY created ASC')
 
-    print(f"\n{'─' * 50}\nSPRINT SUMMARY for {assignee}")
+    log(f"\n{'─' * 50}\nSPRINT SUMMARY for {assignee}")
 
     projects = set()
     for issue in all_open_issues:
         try:
             projects.add(issue.fields.project.name)
         except AttributeError:
-            print(f"AttributeError (project name) for {issue.key}")
-    print(f"Projects: {projects}")
+            log(f"AttributeError (project name) for {issue.key}")
+    log(f"Projects: {projects}")
 
-    timeentries = []
+    timeentries = {}
 
     for project in projects:
         finished_issues = []
         finished_hours = 0
         total_hours = 0
-        print(f"  {project}")
+        log(f"  {project}")
 
         for issue in all_open_issues:
 
@@ -123,21 +154,12 @@ def get_project_hours(assignee):
                 finished_hours += hours
                 finished_issues.append(issue)
 
-        print(f"    {project} total:    {len(all_open_issues)} issues, {total_hours} h")
+        log(f"    {project} total:    {len(all_open_issues)} issues, {total_hours} h")
         for issue in all_open_issues:
-            print(f"      {issue_to_string(issue)}")
-        print(f"    {project} finished: {len(finished_issues)} issues, {finished_hours} h")
+            log(f"      {issue_to_string(issue)}")
+        log(f"    {project} finished: {len(finished_issues)} issues, {finished_hours} h")
         for issue in finished_issues:
-            print(f"      {issue_to_string(issue)}")
-        timeentries.append({"project": project, "time": finished_hours})
-    print(f"{'─' * 50}\n")
+            log(f"      {issue_to_string(issue)}")
+        timeentries[project] = finished_hours
+    log(f"{'─' * 50}\n")
     return timeentries
-
-times = get_project_hours("m.hedl@value-one.com")
-for entry in times:
-    print(entry)
-
-"""
-Assignees: {'a.nevlacsil@value-one.com', 'f.gabillon@value-one.com', 'm.hedl@value-one.com'}
-Projects: {'re:mory', 'reworkX'}
-"""

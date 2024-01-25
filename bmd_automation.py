@@ -160,6 +160,7 @@ def find_dismiss_popup():
     except Exception as e:
         log("No infobox found. Continue as usual.")
 
+
 def input_lea_stuff(projekt_nr, tatigkeit_nr, time=None):
     sleep(3)
     # CLICK THE NEW BUTTON
@@ -223,7 +224,6 @@ def input_lea_stuff(projekt_nr, tatigkeit_nr, time=None):
 
     except Exception as e:
         log(e)
-
 
 """
    __ _____________ __  __   _____   ________ 
@@ -361,5 +361,21 @@ def sign_off():
 
 def perform_weekly_lea(projects):
     log(f"Performing weekly LEA with: {projects}")
-    # TODO: write thsi stuff
-    pass
+    #navigate_to_home()
+    #find_click_button("SEB")
+    #find_click_button("Weekly service entry")
+
+def convert_to_lea_projects(projects):
+    """
+    Converts the time to LEA format.
+    """
+
+    print(projects)
+
+    lea_projects = []
+
+    # projekt, tätigkeit, time
+    for project in projects:
+        print(project)
+        print(projects[project])
+        #lea_projects.append({"project": projects[project], "activity": project["activity"], "time": project["time"]})
