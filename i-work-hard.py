@@ -173,9 +173,8 @@ if __name__ == '__main__':
 
     if args.j:
         times = jira.get_project_hours(cred.JIRA_USER, print_verbose=False)
-        # bmd.start_bmd(url=cred.BASE_URL, user=cred.BMD_USER, password=cred.BMD_PASS)
-        lea_projects = bmd.convert_to_lea_projects(times)
-        # bmd.perform_weekly_lea(times)
+        bmd.start_bmd(url=cred.BASE_URL, user=cred.BMD_USER, password=cred.BMD_PASS)
+        bmd.perform_weekly_lea(times)
 
 
     # main()

@@ -8,6 +8,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 
+import credentials as cred
+
 # global vars
 verbose = True
 headless = False
@@ -55,7 +57,7 @@ def init_driver():
 
     options = webdriver.ChromeOptions()
     options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
-    options.add_argument("--window-size=1300,1000")
+    options.add_argument("--window-size=1300,1300")
 
     if headless:
         options.add_argument("--start-maximized")
@@ -136,7 +138,7 @@ def navigate_to_home():
     """
     Goes to the home page of BMD
     """
-    sleep()  # because BMD is f*cking slow
+    sleep(2)  # because BMD is f*cking slow
     try:
         WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//a[@id='NavBarBtnMain']"))).click()
         log(f"Home Sweet Home.")
@@ -159,6 +161,66 @@ def find_dismiss_popup():
         log("Found & clicked Infobox Button")
     except Exception as e:
         log("No infobox found. Continue as usual.")
+
+def input_lea_weekly_stuff(lea_projects):
+
+    def convert_time_to_decimal(time_str):
+        hours, minutes = map(int, time_str.split(":"))
+        decimal_time = hours + minutes / 60.0
+        return decimal_time
+
+    def convert_decimal_to_time(decimal_time):
+        hours = int(decimal_time)
+        minutes = int((decimal_time - hours) * 60)
+        return f"{hours:02}:{minutes:02}"
+
+    for project in lea_projects:
+        sleep(5)
+        # CLICK THE NEW BUTTON
+        # if done a second time, new btn is greyed out and line is already there to fill, so no emergency.
+        find_click_button("New", emergency=False)
+        # DISMISS THE POPUP IF THERE
+        # sometime there is a popup with text (Please note that the services from 1. January 2024 have not yet been completed!) after the "New" button is clicked
+        # check if it is there and close it, if not continue as usual
+        find_dismiss_popup()
+        sleep()
+
+        try:
+            project_time = project["time"]
+            txt_project_number = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.XPATH, f"//input[contains(@name, 'MCA_WOL_PRO_PROJEKTNR')]")))
+            project_nr = project["bmd_project_no"]
+            txt_project_number.send_keys(project_nr + Keys.ENTER)
+
+            txt_act_number = WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.XPATH, f"//input[contains(@name, 'MCA_WOL_ARL_ARTIKELNR')]")))
+            activity_number = project["bmd_act_no"]
+            txt_act_number.send_keys(activity_number + Keys.ENTER + Keys.TAB * 8)  # tab so that time field is in view and rendered
+
+            day_list = ["MCA_WOL_MO_LEIST_MENGE", "MCA_WOL_DI_LEIST_MENGE", "MCA_WOL_MI_LEIST_MENGE", "MCA_WOL_DO_LEIST_MENGE", "MCA_WOL_FR_LEIST_MENGE"]
+            for day in day_list:
+                if project_time <= 0:
+                    break
+                # CLICK THREE DOTS AND READ ENTRY
+                textfield = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//input[contains(@name, '{day}')]")))
+                three_points = WebDriverWait(driver, 10).until(EC.visibility_of_element_located((By.XPATH, f"//input[contains(@name, '{day}')]//../../div[contains(@class, 'pictos')]")))
+                three_points.click()
+                time_booked = textfield.get_attribute("value")
+                time_booked_decimal = convert_time_to_decimal(time_booked)
+
+                # IF PROJECT TIMW WOULD GO NEGATIVE, ADJUST TIME
+                if project_time < time_booked_decimal:
+                    string_time = convert_decimal_to_time(project_time)
+                    textfield.send_keys(Keys.BACKSPACE * 5 + string_time + Keys.ENTER * 2)
+                    project_time = 0
+                    log(f"Manual remaining time entry: {project_time}")
+                else:
+                    project_time -= time_booked_decimal
+                    log(f"Automatic time entry: {time_booked}")
+            find_click_button("Save")
+
+        except:
+            log(f"Error while bookting weekly time.")
+            return
+
 
 
 def input_lea_stuff(projekt_nr, tatigkeit_nr, time=None):
@@ -361,21 +423,52 @@ def sign_off():
 
 def perform_weekly_lea(projects):
     log(f"Performing weekly LEA with: {projects}")
-    #navigate_to_home()
-    #find_click_button("SEB")
-    #find_click_button("Weekly service entry")
+    lea_projects = convert_to_lea_projects(projects)
+    log(f"Converted to {len(lea_projects)} LEA projects")
+    for project in lea_projects:
+        log(project)
+
+    navigate_to_home()
+    sleep(1)
+    find_click_button("SEB")
+    find_click_button("Weekly service entry")
+    input_lea_weekly_stuff(lea_projects)
 
 def convert_to_lea_projects(projects):
     """
     Converts the time to LEA format.
+    INPUT:
+    {'name1': 10.0, 'name2': 20.0}
+
+    BMD_JIRA_TRANSLATION = [
+    {"jira_project": "name1", "bmd_project_no": "111", "bmd_act_no": "01"},
+    {"jira_project": "name2", "bmd_project_no": "222", "bmd_act_no": "02"}
+    ]
+
+    BMD_DEFAULT_PROJECT = {"bmd_project_no": "333", "bmd_act_no": "03"}
+
+    OUTPUT []:
+    {'bmd_project_no': '111', 'bmd_act_no': '01', 'time': 20.0}
+    {'bmd_project_no': '222', 'bmd_act_no': '02', 'time': 10.0}
+    {'bmd_project_no': '333', 'bmd_act_no': '03'}
     """
 
-    print(projects)
-
+    # log(projects)
     lea_projects = []
 
     # projekt, tätigkeit, time
     for project in projects:
-        print(project)
-        print(projects[project])
-        #lea_projects.append({"project": projects[project], "activity": project["activity"], "time": project["time"]})
+        found_project = False
+        for trans in cred.BMD_JIRA_TRANSLATION:
+            if trans["jira_project"] == project:
+                found_project = True
+                bmd_project_no = trans["bmd_project_no"]
+                bmd_act_no = trans["bmd_act_no"]
+                # log(f"Project {project} -> Project.Nr. {bmd_project_no}, Activity.Nr. {bmd_act_no}. ")
+                lea_projects.append({"bmd_project_no": bmd_project_no, "bmd_act_no": bmd_act_no, "time": projects[project]})
+        if not found_project:
+            log(f"Project {project} from Jira not found in translation table.")
+
+    lea_projects.append(cred.BMD_DEFAULT_PROJECT)
+
+    return lea_projects
